@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Text, View, Image, StyleSheet, Pressable } from "react-native";
-import { Ionicons } from '@expo/vector-icons'; 
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from "@react-navigation/native";
 
 
 const Pin = (props) => {
 
     // Destructuring image and title from props:
-    const {image, title} = props.pin;
+    const {id, image, title} = props.pin;
 
-    const [ratio, setRatio] = useState(1/2);
+    const [ratio, setRatio] = useState(1);
 
-    const onLike = () => {
-
-    };
+    const navigation = useNavigation();
 
     useEffect(() => {
         if (image) {
@@ -20,8 +19,16 @@ const Pin = (props) => {
         }
     }, [image]);
 
+    const onLike = () => {
+
+    };
+
+    const goToPinPage = () => {
+        navigation.navigate("Pin", { id });
+    }
+
     return (
-        <View style={styles.pin}>
+        <Pressable onPress={goToPinPage} style={styles.pin}>
             <View>
                 <Image source={{ uri: image }}
                 style={[styles.image, {aspectRatio: ratio}]} />
@@ -31,7 +38,7 @@ const Pin = (props) => {
             </View>
             <Text style={styles.title} numberOfLines={2}>{title}</Text>
             
-      </View>
+      </Pressable>
     )
 }
 
