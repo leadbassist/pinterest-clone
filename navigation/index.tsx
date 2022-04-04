@@ -22,6 +22,7 @@ import PinScreen from '../screens/PinScreen';
 
 import { FontAwesome5 } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import CreatePinScreen from '../screens/CreatePinScreen';
 
 export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
   return (
@@ -80,7 +81,7 @@ function BottomTabNavigator() {
       />
       <BottomTab.Screen
         name="CreatePin"
-        component={ProfileScreen}
+        component={CreatePinScreen}
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => 
