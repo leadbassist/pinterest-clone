@@ -18,6 +18,7 @@ export type RootStackParamList = {
   Pin: { id: string };
   Modal: undefined;
   NotFound: undefined;
+  Auth: undefined;
 };
 
 export type RootStackScreenProps<Screen extends keyof RootStackParamList> = NativeStackScreenProps<
