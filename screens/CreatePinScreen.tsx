@@ -1,10 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Image, View, Platform, TextInput, StyleSheet } from 'react-native';
+import { Button, Image, View, Platform, TextInput, StyleSheet, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { useNhostClient } from '@nhost/react';
+import { useNavigation } from '@react-navigation/native';
+
+const CREATE_PIN_MUTATION = `
+mutation MyMutation ($image: String!, $title: String) {
+  insert_auth_pins(objects: {image: $image, title: $title }) {
+    returning {
+      created_at
+      id
+      image
+      title
+      user_id
+    }
+  }
+}
+`;
 
 export default function CreatePinScreen() {
-  const [image, setImage] = useState(null);
+  const [imageUri, setImageUri] = useState<null | string>(null);
   const [title, setTitle] = useState("");
+
+  const nhost = useNhostClient();
+  const navigation = useNavigation();
 
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
@@ -14,20 +33,65 @@ export default function CreatePinScreen() {
       quality: 1,
     });
 
-    console.log(result);
-
     if (!result.cancelled) {
-      setImage(result.uri);
+      setImageUri(result.uri);
     }
   };
 
-  const onSubmit = () => {}
+  const uploadFile = async () => {
+    // because we added type 'null' on imageUri STATE, we need to accomodate that scenario:
+    if (!imageUri) {
+      return {
+        error: {
+          message: "No image selected",
+        }
+      };
+    }
+
+    const parts = imageUri.split("/");
+    const name = parts[parts.length - 1];
+    const nameParts = name.split(".");
+    const extension = nameParts[nameParts.length - 1];
+
+    const uri = Platform.OS === "ios" ? imageUri.replace("file://", "") : imageUri;
+
+    const result = await nhost.storage.upload({
+      file: {
+        name: name,
+        type: `image/${extension}`,
+        uri: uri,
+      }
+    });
+    return result;
+  };
+
+  const onSubmit = async () => {
+    // upload image to storage
+    const uploadResult = await uploadFile();
+
+    if (uploadResult.error) {
+      Alert.alert("Error uploading the image", uploadResult.error.message);
+      return;
+    }
+
+
+    const result = await nhost.graphql.request(CREATE_PIN_MUTATION, {
+      title: title,
+      image: uploadResult.fileMetadata.id,
+    });
+    if (result.error) {
+      Alert.alert("Error creating the post", result.error.message);
+    } else {
+      navigation.goBack()
+    }
+    // console.log(result);
+  };
 
   return (
     <View style={styles.root}>
       <Button title="Upload your pin" onPress={pickImage} />
       <>
-        {image && <Image source={{ uri: image }} style={styles.image} />}
+        {imageUri && <Image source={{ uri: imageUri }} style={styles.image} />}
         <TextInput placeholder="Title.." value={title} onChangeText={setTitle} style={styles.input} />
         <Button title="Submit pin" onPress={onSubmit} />
       </>

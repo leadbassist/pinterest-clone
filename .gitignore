@@ -1,6 +1,7 @@
 node_modules/
 .expo/
 dist/
+completedProjectByLecturer/
 npm-debug.*
 *.jks
 *.p8
